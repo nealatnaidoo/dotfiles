@@ -1,0 +1,14 @@
+# OS
+.DS_Store
+
+# Sensitive files that shouldn't be versioned
+# (API keys are in Keychain, so configs are safe)
+
+# Temporary files
+*.tmp
+*.swp
+*~
+
+# Python
+__pycache__/
+*.pyc

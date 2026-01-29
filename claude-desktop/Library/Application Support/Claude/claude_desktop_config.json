@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "bureaucrat": {
+      "command": "/bin/bash",
+      "args": [
+        "-c",
+        "export GEMINI_API_KEY=$(security find-generic-password -a $USER -s GEMINI_API_KEY -w) && export OPENAI_API_KEY=$(security find-generic-password -a $USER -s OPENAI_API_KEY -w) && export GITHUB_TOKEN=$(security find-generic-password -a $USER -s GITHUB_TOKEN -w) && export FLY_API_TOKEN=$(security find-generic-password -a $USER -s FLY_API_TOKEN -w) && /Users/naidooone/.pyenv/shims/python -m bureaucrat_mcp"
+      ],
+      "env": {
+        "BUREAUCRAT_MCP_RULES_PATH": "/Users/naidooone/Developer/projects/thatcher/bureaucrat_mcp_v2_rules.yaml",
+        "BUREAUCRAT_ARTIFACT_DIR": "/Users/naidooone/Developer/projects/thatcher/artifacts"
+      }
+    }
+  }
+}
