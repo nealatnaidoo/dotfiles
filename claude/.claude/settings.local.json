@@ -1,4 +1,35 @@
 {
+  "permissions": {
+    "defaultMode": "bypassPermissions",
+    "allow": [
+      "Task(*)",
+      "Bash(*:*)",
+      "Read",
+      "Write",
+      "Edit",
+      "Glob",
+      "Grep",
+      "WebFetch(domain:*)",
+      "WebSearch"
+    ],
+    "deny": [
+      "Read(.env*)",
+      "Read(**/.env*)",
+      "Bash(rm -rf /*:*)",
+      "Bash(rm -rf ~/*:*)",
+      "Bash(rm -rf /:*)",
+      "Bash(sudo rm:*)",
+      "Bash(chmod 777:*)",
+      "Bash(> /dev/sd*:*)",
+      "Bash(dd if=*of=/dev/*:*)",
+      "Write(~/.ssh/**)",
+      "Write(~/.aws/**)",
+      "Write(~/.config/gh/**)",
+      "Edit(~/.ssh/**)",
+      "Edit(~/.aws/**)",
+      "Edit(~/.config/gh/**)"
+    ]
+  },
   "hooks": {
     "UserPromptSubmit": [
       {
@@ -9,207 +40,109 @@
           },
           {
             "type": "command",
-            "command": "pgrep -f 'agentic_hud start' > /dev/null || (cd /Users/naidooone/Developer/projects/agentic_hud && source .venv/bin/activate && agentic_hud start > /dev/null 2>&1 &)"
+            "command": "/Users/naidooone/Developer/projects/agentic_hud/.venv/bin/agentic_hud check -q || (/Users/naidooone/Developer/projects/agentic_hud/.venv/bin/agentic_hud start > /dev/null 2>&1 &)"
           }
         ]
       }
-    ]
-  },
-  "permissions": {
-    "allow": [
-      "Bash(python -m ruff check:*)",
-      "Bash(python -m mypy:*)",
-      "Bash(python -m pytest:*)",
-      "Bash(python scripts/run_quality_gates.py:*)",
-      "Bash(wc:*)",
-      "Bash(find:*)",
-      "Bash(cd:*)",
-      "Bash(ruff check:*)",
-      "Bash(ruff:*)",
-      "Bash(mypy:*)",
-      "Bash(done)",
-      "Bash(python scripts/quality_gates.py:*)",
-      "Bash(pytest:*)",
-      "Bash(ls:*)",
-      "Bash(sqlite3:*)",
-      "Bash(fly deploy:*)",
-      "Bash(curl:*)",
-      "Bash(fly logs:*)",
-      "Bash(npx --yes openapi-typescript-codegen:*)",
-      "Bash(npm run build:*)",
-      "Bash(npm run test:*)",
-      "Bash(npm test:*)",
-      "Bash(npm run:*)",
-      "Bash(npm install:*)",
-      "Bash(npm run generate:api:*)",
-      "Bash(npx openapi-typescript-codegen --input ../openapi.json --output ./lib/api --client axios)",
-      "Bash(grep:*)",
-      "Bash(python3 -m pytest:*)",
-      "Bash(bun run build:*)",
-      "Bash(bun run test:*)",
-      "Bash(bun test:*)",
-      "Bash(bun install:*)",
-      "Bash(git status:*)",
-      "Bash(git diff:*)",
-      "Bash(git log:*)",
-      "Bash(git branch:*)",
-      "Bash(git checkout:*)",
-      "Bash(git add:*)",
-      "Bash(git commit:*)",
-      "Bash(git stash:*)",
-      "Bash(git fetch:*)",
-      "Bash(git pull:*)",
-      "Bash(gh:*)",
-      "Bash(docker build:*)",
-      "Bash(docker compose:*)",
-      "Bash(docker ps:*)",
-      "Bash(docker logs:*)",
-      "Bash(uv:*)",
-      "Bash(poetry:*)",
-      "Bash(pip install:*)",
-      "Bash(pip freeze:*)",
-      "Bash(python -c:*)",
-      "Bash(python3 -c:*)",
-      "Bash(cat:*)",
-      "Bash(head:*)",
-      "Bash(tail:*)",
-      "Bash(mkdir:*)",
-      "Bash(touch:*)",
-      "Bash(cp:*)",
-      "Bash(mv:*)",
-      "Bash(tree:*)",
-      "Bash(pwd:*)",
-      "Bash(which:*)",
-      "Bash(echo:*)",
-      "Bash(node:*)",
-      "Bash(npx:*)",
-      "WebFetch(domain:www.decisionproblem.com)",
-      "Bash(git show:*)",
-      "Bash(git merge:*)",
-      "Bash(git tag:*)",
-      "Bash(git remote:*)",
-      "Bash(git cherry-pick:*)",
-      "Bash(git reset --soft:*)",
-      "Bash(git reset --mixed:*)",
-      "Bash(git clean -n:*)",
-      "Bash(git rev-parse:*)",
-      "Bash(git blame:*)",
-      "Bash(docker images:*)",
-      "Bash(docker exec:*)",
-      "Bash(docker network:*)",
-      "Bash(docker volume:*)",
-      "Bash(docker inspect:*)",
-      "Bash(docker pull:*)",
-      "Bash(docker start:*)",
-      "Bash(black:*)",
-      "Bash(isort:*)",
-      "Bash(bandit:*)",
-      "Bash(pylint:*)",
-      "Bash(flake8:*)",
-      "Bash(coverage:*)",
-      "Bash(python -m:*)",
-      "Bash(python:*)",
-      "Bash(pip list:*)",
-      "Bash(pip show:*)",
-      "Bash(yarn:*)",
-      "Bash(pnpm:*)",
-      "Bash(npm ci:*)",
-      "Bash(npm outdated:*)",
-      "Bash(npm ls:*)",
-      "Bash(npm audit:*)",
-      "Bash(eslint:*)",
-      "Bash(prettier:*)",
-      "Bash(tsc:*)",
-      "Bash(vitest:*)",
-      "Bash(vite:*)",
-      "Bash(next:*)",
-      "Bash(cargo build:*)",
-      "Bash(cargo test:*)",
-      "Bash(cargo run:*)",
-      "Bash(cargo check:*)",
-      "Bash(cargo clippy:*)",
-      "Bash(cargo fmt:*)",
-      "Bash(rustfmt:*)",
-      "Bash(go build:*)",
-      "Bash(go test:*)",
-      "Bash(go run:*)",
-      "Bash(go mod:*)",
-      "Bash(go fmt:*)",
-      "Bash(go vet:*)",
-      "Bash(jq:*)",
-      "Bash(yq:*)",
-      "Bash(diff:*)",
-      "Bash(sort:*)",
-      "Bash(uniq:*)",
-      "Bash(cut:*)",
-      "Bash(xargs:*)",
-      "Bash(du:*)",
-      "Bash(df:*)",
-      "Bash(stat:*)",
-      "Bash(file:*)",
-      "Bash(basename:*)",
-      "Bash(dirname:*)",
-      "Bash(realpath:*)",
-      "Bash(date:*)",
-      "Bash(env:*)",
-      "Bash(tar:*)",
-      "Bash(zip:*)",
-      "Bash(unzip:*)",
-      "Bash(gzip:*)",
-      "Bash(gunzip:*)",
-      "Bash(openssl:*)",
-      "Bash(base64:*)",
-      "Bash(md5:*)",
-      "Bash(shasum:*)",
-      "Bash(fly:*)",
-      "Bash(vercel:*)",
-      "Bash(netlify:*)",
-      "Bash(kubectl get:*)",
-      "Bash(kubectl describe:*)",
-      "Bash(kubectl logs:*)",
-      "Bash(terraform plan:*)",
-      "Bash(terraform fmt:*)",
-      "Bash(whoami:*)",
-      "Bash(hostname:*)",
-      "Bash(uname:*)",
-      "Bash(lsof:*)",
-      "Bash(ps:*)",
-      "Bash(netstat:*)",
-      "Bash(dig:*)",
-      "Bash(nslookup:*)",
-      "Bash(ping:*)",
-      "Write(~/Developer/**)",
-      "Edit(~/Developer/**)",
-      "Write(/Users/naidooone/Developer/**)",
-      "Edit(/Users/naidooone/Developer/**)",
-      "Write(~/Documents/**)",
-      "Edit(~/Documents/**)",
-      "Write(/Users/naidooone/Documents/**)",
-      "Edit(/Users/naidooone/Documents/**)",
-      "Bash(ollama list:*)",
-      "Bash(ollama pull:*)",
-      "Bash(pkill:*)"
     ],
-    "deny": [
-      "Read(.env*)",
-      "Bash(rm -rf:*)",
-      "Bash(rm -r /:*)",
-      "Bash(sudo rm:*)",
-      "Bash(chmod 777:*)"
+    "SubagentStart": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ~/.claude/hooks/manage_deploy_gate.py"
+          }
+        ]
+      },
+      {
+        "matcher": "backend-coding-agent|frontend-coding-agent",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ~/.claude/hooks/verify_ba_artifacts.py"
+          },
+          {
+            "type": "command",
+            "command": "python3 ~/.claude/hooks/verify_phase_transition.py"
+          }
+        ]
+      },
+      {
+        "matcher": "business-analyst",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ~/.claude/hooks/verify_devops_approval.py"
+          },
+          {
+            "type": "command",
+            "command": "python3 ~/.claude/hooks/verify_phase_transition.py"
+          }
+        ]
+      },
+      {
+        "matcher": "qa-reviewer",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ~/.claude/hooks/verify_evidence_exists.py"
+          },
+          {
+            "type": "command",
+            "command": "python3 ~/.claude/hooks/verify_phase_transition.py"
+          }
+        ]
+      },
+      {
+        "matcher": "solution-designer|persona-evaluator|code-review-agent",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ~/.claude/hooks/verify_phase_transition.py"
+          }
+        ]
+      }
     ],
-    "ask": [
-      "Bash(git push:*)",
-      "Bash(npm publish:*)",
-      "Bash(fly deploy --force:*)",
-      "Bash(docker push:*)",
-      "Bash(docker rm:*)",
-      "Bash(docker rmi:*)",
-      "Bash(docker stop:*)",
-      "Bash(git rebase:*)",
-      "Bash(psql:*)",
-      "Bash(mysql:*)",
-      "Bash(mongosh:*)",
-      "Bash(redis-cli:*)"
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ~/.claude/hooks/block_deployment.py"
+          }
+        ]
+      },
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ~/.claude/hooks/protect_deploy_gate.py"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ~/.claude/hooks/verify_manifest_updated.py"
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ~/.claude/hooks/save_manifest_state.py"
+          }
+        ]
+      }
     ]
   }
 }
