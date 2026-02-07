@@ -6,22 +6,119 @@ Always reference the development prompts folder for established patterns, lesson
 
 **Location**: `/Users/naidooone/Developer/claude/prompts/`
 
-**Version**: v2.0 (agentic_prompt_pack_v1.0) - Updated 2026-01-16
+**Version**: v2.6 (worktree_parallelization) - Updated 2026-01-31
 
-### Available Subagents
+### Agent Taxonomy: Macro vs Micro
 
-| Agent | When to Use | Prompt File |
-|-------|-------------|-------------|
-| `solution-designer` | Starting a new project - clarify scope before detailed specs | `agents/solution-designer.md` |
-| `business-analyst` | Create/update BA artifacts (spec, tasklist, rules, gates) | `agents/business-analyst.md` |
-| `qa-reviewer` | After code changes - quick governance check (TDD, hexagonal, gates) | `agents/qa-reviewer.md` |
-| `code-review-agent` | Deep task completion verification - interpret specs/stories/tests, produce bug docs and improvement recommendations | `agents/code-review-agent.md` |
-| `lessons-advisor` | Before decisions - consult past lessons and operationalize into gates | `agents/lessons-advisor.md` |
-| `persona-evaluator` | Evaluate products through composite persona scenarios - generate user stories, acceptance criteria, QA tests, and prioritized backlogs | `agents/persona-evaluator.md` |
+Agents are classified by scope:
 
-**Agent Prompt Files Location**: `/Users/naidooone/Developer/claude/prompts/agents/`
+| Scope | Entry Point | Characteristics |
+|-------|-------------|-----------------|
+| **MACRO (Portfolio)** | `~/.claude/{domain}/manifest.yaml` | Cross-project governance, exclusive permissions |
+| **MICRO (Project)** | `{project}/.claude/manifest.yaml` | Single project, internal or visiting |
+
+### Macro Agents (Portfolio Level)
+
+| Agent | Domain | Exclusive Permission | Prompt File |
+|-------|--------|---------------------|-------------|
+| `devops-governor` | CI/CD & Deployment | **Execute deployments** | `~/.claude/agents/devops-governor.md` |
+
+**Macro agents** manage consistency across all projects. Other agents MUST consult them for their domain.
+
+### Micro Agents (Project Level)
+
+| Agent | When to Use | Exclusive Permission | Prompt File |
+|-------|-------------|---------------------|-------------|
+| `coding-agent` | Implement code from BA specs only - **NEVER accepts direct user requests** | **Write source code** | `~/.claude/agents/coding-agent.md` |
+| `solution-designer` | Starting a new project - clarify scope before detailed specs (MUST consult devops-governor) | - | `~/.claude/agents/solution-designer.md` |
+| `business-analyst` | Create/update BA artifacts (MUST verify devops approval) | - | `~/.claude/agents/business-analyst.md` |
+| `qa-reviewer` | After code changes - governance check (TDD, hexagonal, gates) + optional persona-based validation | - | `~/.claude/agents/qa-reviewer.md` |
+| `code-review-agent` | Deep task completion verification - interpret specs/stories/tests, produce bug docs and improvement recommendations | - | `~/.claude/agents/code-review-agent.md` |
+| `lessons-advisor` | Before decisions - consult past lessons and operationalize into gates | - | `~/.claude/agents/lessons-advisor.md` |
+
+**CRITICAL - Exclusive Permissions:**
+- **Source Code**: ONLY `coding-agent` can write/modify source code - all other agents MUST NOT
+- **Deployments**: ONLY `devops-governor` can execute deployments - all other agents MUST NOT
+
+**CRITICAL - BA-Only Input Constraint:**
+- `coding-agent` accepts work ONLY from BA-produced artifacts (spec, tasklist)
+- Users MUST NOT request coding directly - they must go through BA workflow
+- If a user requests code changes, redirect them to create a spec first
+
+**Note**: Persona evaluation is embedded in `qa-reviewer` with configurable lens packs.
+
+### Persona Lens Packs
+
+Lens packs define domain-specific evaluation perspectives. Available at `~/.claude/lenses/`:
+
+| Pack | Domain | Lenses |
+|------|--------|--------|
+| `creator_publishing.yaml` | Blogs, newsletters, content | Operator, Marketer, Editor, Platform, Trust |
+| `fitness_training.yaml` | PT apps, gyms, coaching | Coach, Business Owner, Trainee, Payer, Safety |
+| `saas_b2b.yaml` | Business software, tools | Buyer, Admin, Power User, Casual User, Support |
+
+**Usage:**
+- Default: `"Run QA with persona validation"` → uses creator_publishing
+- Specific: `"Run QA with fitness lens pack"` → uses fitness_training
+- Project: Create `.claude/persona_lenses.yaml` in your project → auto-detected
+
+**Custom lenses:** Copy a template to your project's `.claude/persona_lenses.yaml` and modify for your domain.
+
+**Agent Prompt Files Location**: `~/.claude/agents/` (registered subagents)
+**Detailed Prompts Location**: `/Users/naidooone/Developer/claude/prompts/agents/` (full methodology docs)
 
 To invoke a subagent, use the Task tool with `subagent_type` matching the agent name (e.g., `subagent_type: "lessons-advisor"`).
+
+### Agent Governance & Contamination Protection
+
+All agents (internal and visiting) operate under strict governance to prevent configuration drift and document contamination.
+
+**Key Principles:**
+- **Manifest as Universal Entry Gate**: ALL agents read their scope's manifest FIRST on start/restart/resume
+  - Macro agents: `~/.claude/{domain}/manifest.yaml`
+  - Micro agents: `{project}/.claude/manifest.yaml`
+- **Macro vs Micro Scope**: Macro agents govern portfolios; micro agents work within projects
+- **Exclusive Permissions**: Two capabilities are exclusively reserved:
+  - Source code modification → `coding-agent` ONLY (no other agent may write code)
+  - Deployment execution → `devops-governor` ONLY (no other agent may deploy)
+- **Consultation Required**: Micro agents MUST consult relevant macro agents before certain decisions
+- **Internal vs Visiting**: Internal agents work within the workflow; visiting agents analyze and report only
+- **BA-Only Input for Coding**: `coding-agent` accepts work ONLY from BA specs - users must go through BA workflow
+- **ID Sequencing**: BUG/IMPROVE IDs are project-global, never reused, always search before creating
+- **Document Locations**: All outputs use `.claude/` folder structure (artifacts, evidence, remediation, evolution)
+
+**Governance Documentation:**
+
+| Document | Location | Purpose |
+|----------|----------|---------|
+| **Agent Governance** | `~/.claude/docs/agent_governance.md` | **MASTER** governance rules, exclusive permissions, compliance checklists |
+| Agent Operating Model | `~/.claude/docs/agent_operating_model.md` | Complete model with history, diagrams, design decisions |
+| Agent Creation Guide | `~/.claude/docs/agent_creation_guide.md` | **MANDATORY** guide for creating new agents |
+| Document Consistency | `~/.claude/docs/document_consistency.md` | Canonical reference for document locations |
+| CLAUDE.md Change Protocol | `~/.claude/docs/claude_md_change_protocol.md` | Rules for modifying this file |
+| Handoff Envelope Format | `~/.claude/docs/handoff_envelope_format.md` | Standardized agent-to-agent handoff specifications |
+| Agent Prompt Schema | `~/.claude/schemas/agent_prompt.schema.yaml` | Validation rules for agent prompts |
+| DevOps Manifest Schema | `~/.claude/schemas/devops_manifest.schema.yaml` | Validation rules for DevOps Governor manifest |
+| Project Manifest Schema | `~/.claude/schemas/project_manifest.schema.yaml` | Validation rules for project manifests |
+| New Agent Template | `~/.claude/templates/new_agent_template.md` | Starting point for new agents |
+| Visiting Agent Template | `~/.claude/agents/visiting-agent-template.md` | Template for external reviewers |
+| **Governance Test Schedule** | `~/.claude/docs/agent_governance_test_schedule.md` | Verification tests for agent governance rules |
+| MCP Integration | `~/.claude/docs/mcp_integration.md` | How MCP servers integrate with agent ecosystem |
+
+**Validation Script:**
+```bash
+# Validate all agents conform to operating model
+python ~/.claude/scripts/validate_agents.py
+
+# Validate specific agent
+python ~/.claude/scripts/validate_agents.py agent-name.md
+```
+
+**Before Modifying CLAUDE.md or Agent Prompts:**
+1. Run validation script (must pass)
+2. Follow change protocol in `~/.claude/docs/claude_md_change_protocol.md`
+3. Update affected agents FIRST if making structural changes
+4. Run validation script again after changes
 
 ### Key Files to Consult (v2.0)
 
@@ -34,36 +131,112 @@ To invoke a subagent, use the Task tool with `subagent_type` matching the agent 
 | `playbooks-v2/ba_playbook_v4_0.md` | BA practical guide: artifact creation, drift handling, escalation |
 | `system-prompts-v2/solution_designer_system_prompt_v2_0.md` | Solution design patterns, handoff envelope format |
 | `playbooks-v2/solution_designer_playbook_v2_0.md` | Solution design: scoping, architecture decisions, tradeoffs |
-| `system-prompts-v2/persona_evaluator_system_prompt_v2_0.md` | Persona-based product evaluation (domain-neutral) |
-| `playbooks-v2/persona_evaluator_playbook_v2_0.md` | Persona evaluator usage: inputs, iteration patterns, prioritization |
+| `system-prompts-v2/persona_evaluator_system_prompt_v2_0.md` | Persona-based evaluation methodology (embedded in qa-reviewer) |
 | `system-prompts-v2/qa_system_prompt_v2_0.md` | QA review: quick governance, TDD, hexagonal compliance |
 | `system-prompts-v2/code_review_system_prompt_v1_0.md` | Deep code review: task completion verification, bug docs, improvements |
 | `playbooks-v2/code_review_playbook_v1_0.md` | Code review practical guide: verification process, templates, patterns |
 | `system-prompts-v2/lessons_system_prompt_v2_0.md` | Lessons operationalization into gates and checklists |
 | `docs-v2/agentic_development_playbook_v1_0.md` | **Lifecycle playbook**: Persona -> Solution -> BA -> Coding -> QA -> Lessons |
 
-### Agent Lifecycle (v2.0)
+### Agent Lifecycle (v2.5)
 
 ```
-Persona Evaluator -> Solution Designer -> BA -> Coding -> QA Review -> Code Review -> Lessons
-        |                   |              |      |           |            |            |
-   scenarios          architecture    artifacts  code    governance   deep verify   improve
-   + stories          + handoff       + tasks   + tests   + quick     + completion   gates
-                      envelope                           pass/fail   + bug docs
+                              ┌─────────────────┐
+                              │ DevOps Governor │ (MACRO - consult for stack/deployment)
+                              └────────┬────────┘
+                                       │ approves
+                                       ▼
+Solution Designer ──► DevOps ──► BA ──► Coding ──► QA Review ──► Code Review ──► Lessons
+        │             consult      │        │           │              │             │
+   scenarios         stack/deploy  artifacts  code    governance   deep verify   improve
+   + stories         approval      + tasks   + tests   + quick     + completion   gates
+   + handoff                                 pass/fail   + bug docs
 ```
+
+**DevOps Governor Integration:**
+- Solution Designer MUST consult DevOps Governor before finalizing stack/deployment
+- BA MUST verify DevOps approval stamp before proceeding
+- Coding/QA agents MUST request deployment via DevOps Governor (cannot deploy directly)
 
 **QA Reviewer vs Code Review Agent:**
 - `qa-reviewer`: Quick governance check (5-10 min) - TDD, hexagonal, gates compliance
 - `code-review-agent`: Deep verification (60 min) - actual task completion, spec fidelity, bug docs
 
+### Worktree Parallelization (v1.2)
+
+Git worktrees enable parallel development: BA can work ahead creating specs while Coding agents implement in separate worktrees.
+
+**Key Concepts:**
+- **Feature Backlog**: Queue of fully-specified features ready for implementation
+- **Active Worktrees**: Feature worktrees currently being implemented
+- **Main Worktree**: Planning hub where BA and Solution Designer work
+
+**Workflow:**
+```
+MAIN WORKTREE (BA Planning)           FEATURE WORKTREES (Coding)
+│                                     │
+├─ Create spec for Feature A         │
+├─ Add to BACKLOG ────────────────────┼──► Spawn worktree-A
+├─ Create spec for Feature B         │    └─ Coding Agent implements
+├─ Add to BACKLOG ────────────────────┼──► Spawn worktree-B
+│                                     │    └─ Coding Agent implements
+├─ Handle drift from worktrees       │
+├─ Merge completed features ◄────────┼─── QA passes, merge
+```
+
+**Manifest Additions** (schema v1.2):
+```yaml
+feature_backlog:
+  - slug: "user-auth"
+    status: ready | in_progress | complete
+    priority: 1
+
+active_worktrees:
+  - name: "user-auth"
+    path: "../myproject-user-auth"
+    phase: coding | qa | complete
+
+worktree_governance:
+  max_parallel: 3
+```
+
+**Helper Script:**
+```bash
+~/.claude/scripts/worktree_manager.sh
+
+# Commands:
+create <project> <feature>     # Create worktree
+backlog list                   # Show backlog
+backlog next                   # Find next to spawn
+spawn-from-backlog <feature>   # Create from backlog
+sync <path>                    # Sync shared artifacts
+remove <path>                  # Remove worktree
+```
+
+**Documentation:**
+- Agent Operating Model: Section 5.1 Worktree-Based Parallelization
+- Artifact Convention: Worktree Artifact Structure
+- Handoff Envelope Format: BA to Worktree Handoff, Worktree Completion
+
 ### Handoff Contracts
 
-Agents communicate via compact "Handoff Envelopes" (<=250 lines) containing:
-- project_slug, problem_statement
-- stakeholders, in_scope/out_of_scope
-- key_flows, domain_objects, risks
-- assumptions, open_questions
-- recommended_next_agent
+Agents communicate via standardized "Handoff Envelopes". Full specification: `~/.claude/docs/handoff_envelope_format.md`
+
+**Envelope Types:**
+| Type | From → To | Key Contents |
+|------|-----------|--------------|
+| Solution Envelope | Solution Designer → BA | Problem, personas, flows, architecture, **DevOps approval stamp** |
+| BA Handoff | BA → Coding Agent | Spec, tasklist, rules, quality gates |
+| Coding Completion | Coding Agent → QA | Evidence files, manifest updates |
+| QA/Review Handoff | QA → Coding Agent | Findings, BUG/IMPROVE entries |
+| Drift Report | Coding Agent → BA | EV entries, scope changes |
+| DevOps Consultation | Solution Designer → DevOps | Stack proposal, deployment architecture |
+| Deployment Request | Any Agent → DevOps | Project, environment, evidence path |
+
+**Key Rules:**
+- Solution envelopes MUST have DevOps approval before BA proceeds
+- All envelopes are versioned (never overwrite)
+- Manifest MUST reflect current artifact versions
 
 ### Mandatory Lesson Consultation
 
@@ -71,21 +244,79 @@ Agents communicate via compact "Handoff Envelopes" (<=250 lines) containing:
 
 #### Before Starting ANY New Project
 1. Run `lessons-advisor` agent with project context/tech stack
-2. Create `{project}_lessons_applied.md` documenting applicable lessons
-3. Add lesson-derived checks to `{project}_quality_gates.md`
-4. Create `CHECKLIST.md` with pre-flight verification
+2. Create `.claude/artifacts/006_lessons_applied_v1.md` documenting applicable lessons
+3. Add lesson-derived checks to `.claude/artifacts/005_quality_gates_v1.md`
+4. Initialize manifest with lesson references
 
 #### After Context Compress or Session Restart
-1. Check for existing `{project}_lessons_applied.md` in project directory
-2. If found, READ IT FIRST to restore lesson context
-3. If not found but project exists, run lessons-advisor before continuing
+1. **Read `.claude/manifest.yaml` FIRST** - single source of truth
+2. Check `outstanding.remediation` - handle bugs before new tasks
+3. Check `outstanding.tasks` - continue pending work
+4. Read current artifact versions from manifest
 
 #### After Project Completion
 1. Run lessons-advisor to capture new lessons learned
 2. Append to `devlessons.md` with evidence from project
 3. Update topic index if new categories emerge
 
-**The `{project}_lessons_applied.md` file is the key artifact that survives context compresses.**
+**The `.claude/manifest.yaml` file is the key artifact that survives context compresses.**
+
+### Available Commands
+
+| Command | Purpose | When to Use |
+|---------|---------|-------------|
+| `/review-project` | Full project review for Prime Directive compliance and spec drift | After completing features, before releases, periodic health checks |
+| `/status` | Display system status (MCP, agents, credentials) | Check environment health |
+| `/commit` | Create git commit | After completing work |
+| `/learn` | Capture lesson to devlessons.md | After discovering reusable insight |
+
+**Command Locations:**
+- `/review-project`: `~/.claude/commands/review-project.md`
+- Prompt template: `/Users/naidooone/Developer/claude/prompts/project_review_prompt.md`
+
+### DevOps Governance (Portfolio Level)
+
+The DevOps Governor is a **macro agent** that ensures CI/CD consistency across all projects.
+
+**Entry Point**: `~/.claude/devops/manifest.yaml`
+
+**Infrastructure:**
+```
+~/.claude/devops/
+├── manifest.yaml           # Portfolio state (read FIRST)
+├── project_registry.yaml   # All registered projects
+├── decisions.md            # Append-only decision log
+├── evolution.md            # Pattern evolution history
+└── patterns/               # Canonical CI/CD templates
+    ├── gitlab-ci/*.yml
+    ├── github-actions/*.yml
+    └── quality-gates/*.yaml
+```
+
+**Non-Negotiables (ALL projects must meet):**
+- Quality Gates: lint, type check, unit tests, security tests
+- Security Scanning: SAST, secret detection, dependency scanning
+- Deployment: environment separation, progressive deployment, health checks, rollback docs
+- Metrics: test coverage, pipeline success rate
+
+**Exclusive Permissions:**
+- **Only devops-governor can execute deployments**
+- Other agents must request deployment via devops-governor
+
+**Consultation Required:**
+| Agent | Must Consult DevOps When |
+|-------|-------------------------|
+| `solution-designer` | Proposing tech stack, deployment architecture, CI/CD platform |
+| `business-analyst` | Must verify DevOps approval stamp before proceeding |
+| `coding-agent` | Requesting deployment after task completion |
+
+**Invocation:**
+```
+"DevOps review for {project} architecture proposal"
+"Request deployment of {project} to dev"
+"Run DevOps audit on {project}"
+"Register {project} in DevOps portfolio"
+```
 
 ### When to Reference
 
@@ -98,6 +329,7 @@ Agents communicate via compact "Handoff Envelopes" (<=250 lines) containing:
 7. **After code changes (quick check)** - Run QA reviewer to verify governance compliance
 8. **After task completion (deep verification)** - Run code-review-agent to verify actual task completion against specs/stories/tests
 9. **After recurring issues** - Consult lessons-advisor to operationalize fixes into gates
+10. **Project health check** - Run `/review-project` to verify Prime Directive compliance and detect spec drift
 
 ### Prime Directive (Non-Negotiable)
 
@@ -111,15 +343,54 @@ This is the foundational rule. All other instructions derive from it.
 - Follow the atomic component pattern from the coding agent prompt + playbook
 - Use strict task loop discipline: one task at a time, TDD, evidence artifacts
 - Run quality gates after every task - must produce machine-readable artifacts:
-  - `artifacts/quality_gates_run.json`
-  - `artifacts/test_report.json`
-  - `artifacts/test_failures.json`
+  - `.claude/evidence/quality_gates_run.json`
+  - `.claude/evidence/test_report.json`
+  - `.claude/evidence/test_failures.json`
+- **Update manifest** after completing tasks or reviews
 - Use drift detection - halt and create EV entries when scope changes
 - Keep domain rules in YAML files, not hardcoded (rules-first execution)
 - Maintain component contracts and manifests
 - Pin dependencies appropriately based on past version issues
 - For Fly.io deployments, review the deployment lessons before configuring
-- EV and D logs are append-only - never rewrite history
+- Evolution and decisions logs are append-only - never rewrite history
+- **Never overwrite artifacts** - always create new versions (v1 → v2)
+
+### Verification Checkpoints (Non-Negotiable)
+
+**After ANY file edit (Edit/Write tool), you MUST run verification:**
+
+```bash
+# Python projects
+ruff check . && mypy . && pytest
+
+# Frontend projects
+npm run build && npm run lint
+
+# Full-stack
+# Run both as appropriate
+```
+
+**Checkpoint Triggers (must re-read system prompt + project artifacts):**
+
+| Trigger | Action |
+|---------|--------|
+| Every 15 substantive turns | Re-anchor: read rules.yaml, quality_gates.md, system prompt |
+| Before starting each new task | Re-anchor + verify no blockedBy tasks |
+| After error recovery (>3 turns debugging) | Re-anchor + self-audit |
+| After any tangent or user question | Re-anchor before resuming |
+| When tempted to say "just this once" | STOP. Re-anchor. |
+
+**Self-Audit Questions (at each checkpoint):**
+- Am I following TDD (tests before implementation)?
+- Am I staying within task scope (no "while I'm here" edits)?
+- Are my changes hexagonal (core depends only on ports)?
+- Have I updated contracts for any changed components?
+- Do evidence artifacts exist for completed work?
+
+**Strict Prohibitions:**
+- **NEVER skip the verification checkpoint**
+- **NEVER mark a task done without evidence artifacts**
+- **NEVER continue past 40 turns without fresh conversation**
 
 ---
 
@@ -142,10 +413,12 @@ Testing requirements vary by layer. These are **hard requirements**, not suggest
 A task is **NOT COMPLETE** unless:
 
 ```
-[ ] artifacts/test_report.json exists
-[ ] artifacts/test_failures.json exists (even if empty)
+[ ] .claude/evidence/test_report.json exists
+[ ] .claude/evidence/test_failures.json exists (even if empty)
+[ ] .claude/evidence/quality_gates_run.json exists
 [ ] All tests relevant to the task pass
 [ ] New code has corresponding new tests
+[ ] manifest.yaml updated with task status
 ```
 
 ### E2E Test Mandates (Lessons 44, 53-57)
@@ -416,18 +689,79 @@ See `devlessons.md` lines 1209-1241 for the curated "Top 30 Rules for Future Pro
 
 Full index at `devlessons.md` lines 114-143.
 
-## Project Artifact Standards
+## Project Artifact Standards (v1.0)
 
-When working on projects with BA artifacts, look for:
-- `{project}_lessons_applied.md` - **READ FIRST** after context compress - applicable lessons from devlessons.md
-- `{project}_spec.md` - Requirements and architecture
-- `{project}_tasklist.md` - Task tracking (dependency-ordered, 30-120 min tasks)
-- `{project}_rules.yaml` - Domain rules
-- `{project}_evolution.md` - Drift and scope changes (append-only)
-- `{project}_decisions.md` - Architectural decisions (append-only)
-- `{project}_quality_gates.md` - Quality requirements + evidence artifact specs
-- `{project}_coding_agent_system_prompt.md` - Project-specific coding rules
-- `CHECKLIST.md` - Pre-flight verification checklist derived from lessons
+### New Project Structure: `.claude/` Folder
+
+All Claude-generated artifacts now live in a `.claude/` folder at project root:
+
+```
+{project}/
+├── .claude/
+│   ├── manifest.yaml                 # Restart checkpoint (single source of truth)
+│   ├── artifacts/                    # Sequenced, versioned BA artifacts
+│   │   ├── 001_solution_envelope_v1.md
+│   │   ├── 002_spec_v1.md
+│   │   ├── 003_tasklist_v1.md
+│   │   ├── 004_rules_v1.yaml
+│   │   ├── 005_quality_gates_v1.md
+│   │   ├── 006_lessons_applied_v1.md
+│   │   └── 007_coding_prompt_v1.md
+│   ├── evolution/                    # Append-only logs
+│   │   ├── evolution.md
+│   │   └── decisions.md
+│   ├── remediation/                  # QA + Code Review findings
+│   │   ├── qa_YYYY-MM-DD.md
+│   │   ├── code_review_YYYY-MM-DD.md
+│   │   └── remediation_tasks.md
+│   └── evidence/                     # Quality gate outputs
+│       ├── quality_gates_run.json
+│       ├── test_report.json
+│       └── test_failures.json
+└── src/
+```
+
+### Naming Convention: `NNN_type_vM.ext`
+
+| Seq | Artifact | Created By |
+|-----|----------|------------|
+| 001 | solution_envelope | Solution Designer |
+| 002 | spec | Business Analyst |
+| 003 | tasklist | Business Analyst |
+| 004 | rules | Business Analyst |
+| 005 | quality_gates | Business Analyst |
+| 006 | lessons_applied | Lessons Advisor |
+| 007 | coding_prompt | Business Analyst |
+
+### Manifest: Restart Checkpoint
+
+The `manifest.yaml` is the single source of truth for:
+- Current workflow phase
+- Active artifact versions
+- Outstanding tasks and remediation items
+- Review history
+
+**Always read manifest first** when resuming work.
+
+### Restart Priority Order
+
+1. **Critical/High remediation** (BUG-XXX items)
+2. **In-progress tasks**
+3. **Medium remediation**
+4. **Pending tasks** (respect blocked_by)
+5. **Low remediation**
+
+### Documentation
+
+- Artifact Convention: `~/.claude/docs/artifact_convention.md`
+- Restart Protocol: `~/.claude/docs/restart_protocol.md`
+- Remediation Format: `~/.claude/docs/remediation_format.md`
+- Manifest Schema: `~/.claude/schemas/project_manifest.schema.yaml`
+
+### Legacy Projects
+
+For projects with old `{project}_spec.md` at root:
+- Migration guide: `/Users/naidooone/Developer/claude/prompts/migrations/MIGRATE_PROJECT_ARTIFACTS.md`
 
 ## Archive Information
 
@@ -515,3 +849,22 @@ When relocating development projects to a new directory:
 3. Restart Claude Code session
 
 **Migration Prompt Location**: `/Users/naidooone/Developer/claude/prompts/migrations/MIGRATE_DEV_FOLDERS.md`
+
+### Migrating Project Artifacts to .claude/ Folder
+
+For projects with legacy `{project}_spec.md` artifacts at root:
+
+1. Run the migration prompt: `migrations/MIGRATE_PROJECT_ARTIFACTS.md`
+2. Create folder structure: `.claude/{artifacts,evolution,remediation,evidence}`
+3. Move and rename files with sequence numbers
+4. Create `manifest.yaml` with current state
+5. Commit migration to git
+
+**Migration Prompt Location**: `/Users/naidooone/Developer/claude/prompts/migrations/MIGRATE_PROJECT_ARTIFACTS.md`
+
+### Automated Migration Script
+
+```bash
+# From project root:
+bash ~/.claude/scripts/migrate_to_claude_folder.sh {project_slug}
+```

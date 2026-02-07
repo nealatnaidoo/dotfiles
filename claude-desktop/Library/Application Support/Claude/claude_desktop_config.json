@@ -11,5 +11,9 @@
         "BUREAUCRAT_ARTIFACT_DIR": "/Users/naidooone/Developer/projects/thatcher/artifacts"
       }
     }
+  },
+  "preferences": {
+    "sidebarMode": "chat",
+    "coworkScheduledTasksEnabled": false
   }
 }

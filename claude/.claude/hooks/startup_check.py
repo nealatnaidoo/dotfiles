@@ -153,6 +153,51 @@ def check_credentials() -> dict:
     return creds
 
 
+def check_agentic_hud() -> dict:
+    """Check Agentic HUD status.
+
+    Returns dict with:
+        - running: bool - whether service is running
+        - pid: int | None - process ID if running
+        - dashboard_url: str | None - dashboard URL if running
+    """
+    result = {
+        "running": False,
+        "pid": None,
+        "dashboard_url": None,
+    }
+
+    # Check PID file
+    pid_file = Path.home() / ".agentic_hud" / "hud.pid"
+    if not pid_file.exists():
+        return result
+
+    try:
+        pid = int(pid_file.read_text().strip())
+        # Check if process is alive
+        os.kill(pid, 0)
+        result["running"] = True
+        result["pid"] = pid
+
+        # Try to get dashboard URL from config
+        config_file = Path.home() / ".agentic_hud" / "config.yaml"
+        if config_file.exists():
+            try:
+                import yaml
+                config = yaml.safe_load(config_file.read_text())
+                host = config.get("dashboard", {}).get("host", "127.0.0.1")
+                port = config.get("dashboard", {}).get("port", 8080)
+                result["dashboard_url"] = f"http://{host}:{port}"
+            except Exception:
+                result["dashboard_url"] = "http://127.0.0.1:8080"
+
+    except (ValueError, ProcessLookupError):
+        # Invalid PID or process not found
+        pass
+
+    return result
+
+
 def check_services() -> dict:
     """Check external service availability."""
     services = {}
@@ -172,6 +217,10 @@ def check_services() -> dict:
     profile_dir = Path.home() / ".notebooklm-automation"
     cookies_file = profile_dir / "Default" / "Cookies"
     services["NotebookLM Auth"] = cookies_file.exists()
+
+    # Agentic HUD
+    hud_status = check_agentic_hud()
+    services["Agentic HUD"] = hud_status["running"]
 
     return services
 
@@ -257,6 +306,14 @@ def print_startup_screen():
     for name, available in services.items():
         icon = f"{GREEN}+{RESET}" if available else f"{RED}-{RESET}"
         print(f"  {icon} {name}")
+
+    # Agentic HUD details (if running)
+    hud_status = check_agentic_hud()
+    if hud_status["running"]:
+        print(f"\n{BOLD}Agentic HUD:{RESET}")
+        print(f"  PID: {hud_status['pid']}")
+        if hud_status["dashboard_url"]:
+            print(f"  Dashboard: {CYAN}{hud_status['dashboard_url']}{RESET}")
 
     # Agents
     print(f"\n{BOLD}Available Agents:{RESET}")
